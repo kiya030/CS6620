@@ -1,0 +1,47 @@
+import boto3
+
+# AWS Region
+AWS_REGION = "us-west-1"  # Change as needed
+
+# Define the bucket and table names
+S3_BUCKET_NAME = "test-bucket-ps2-zz"  # Ensure it's globally unique
+DYNAMODB_TABLE_NAME = "S3-object-size-history"
+
+# Initialize AWS Clients
+s3_client = boto3.client("s3", region_name=AWS_REGION)
+dynamodb_client = boto3.client("dynamodb", region_name=AWS_REGION)
+
+# Function to create S3 bucket
+def create_s3_bucket():
+    try:
+        s3_client.create_bucket(
+            Bucket=S3_BUCKET_NAME,
+            CreateBucketConfiguration={"LocationConstraint": AWS_REGION},
+        )
+        print(f"S3 bucket '{S3_BUCKET_NAME}' created successfully.")
+    except Exception as e:
+        print(f"Error creating S3 bucket: {e}")
+
+# Function to create DynamoDB table
+def create_dynamodb_table():
+    try:
+        response = dynamodb_client.create_table(
+            TableName=DYNAMODB_TABLE_NAME,
+            KeySchema=[
+                {"AttributeName": "bucket_name", "KeyType": "HASH"},  # Partition key
+                {"AttributeName": "timestamp", "KeyType": "RANGE"},  # Sort key
+            ],
+            AttributeDefinitions=[
+                {"AttributeName": "bucket_name", "AttributeType": "S"},
+                {"AttributeName": "timestamp", "AttributeType": "N"},
+            ],
+            BillingMode="PAY_PER_REQUEST",
+        )
+        print(f"DynamoDB table '{DYNAMODB_TABLE_NAME}' created successfully.")
+    except Exception as e:
+        print(f"Error creating DynamoDB table: {e}")
+
+# Run the functions
+if __name__ == "__main__":
+    create_s3_bucket()
+    create_dynamodb_table()
